@@ -1,83 +1,79 @@
-# Definición de la clase Roll para representar un lanzamiento de bola de bolos
 class Roll:
     def __init__(self, pins: int):
-        self.pins = pins  # El número de pines derribados en el lanzamiento
+        self.pins = pins
 
-
-# Definición de la clase abstracta Frame que servirá como base para los frames de bolos
 class Frame:
     def __init__(self):
-        self.rolls = []  # Lista para almacenar los lanzamientos en este frame
+        self.rolls = []
 
     def add_roll(self, pins: int):
-        self.rolls.append(Roll(pins))  # Agrega un lanzamiento a la lista de lanzamientos
+        self.rolls.append(Roll(pins))
 
     def score(self) -> int:
-        pass  # Método abstracto para calcular la puntuación del frame
+        pass
 
     def is_strike(self) -> bool:
-        pass  # Método abstracto para verificar si es un strike
+        pass
 
     def is_spare(self) -> bool:
-        pass  # Método abstracto para verificar si es un spare
+        pass
 
-
-# Definición de la clase NormalFrame que hereda de la clase Frame
 class NormalFrame(Frame):
     def score(self) -> int:
-        pass  # Implementación específica para un frame normal para calcular la puntuación
+        frame_score = sum(roll.pins for roll in self.rolls)
+        return frame_score
 
     def is_strike(self) -> bool:
-        pass  # Implementación específica para un frame normal para verificar si es un strike
+        return len(self.rolls) == 1 and self.rolls[0].pins == 10
 
     def is_spare(self) -> bool:
-        pass  # Implementación específica para un frame normal para verificar si es un spare
+        return len(self.rolls) == 2 and self.score() == 10
 
-
-# Definición de la clase TenthFrame que hereda de la clase Frame
 class TenthFrame(Frame):
     def __init__(self):
         super().__init__()
-        self.extra_roll = None  # Lanzamiento adicional en el décimo frame
+        self.extra_roll = None
 
     def add_roll(self, pins: int):
         if len(self.rolls) < 2:
-            self.rolls.append(Roll(pins))  # Agrega un lanzamiento normal al frame
+            self.rolls.append(Roll(pins))
         elif len(self.rolls) == 2 and self.rolls[0].pins + self.rolls[1].pins >= 10:
-            self.extra_roll = Roll(pins)  # Agrega el lanzamiento extra si es necesario
+            self.extra_roll = Roll(pins)
 
     def score(self) -> int:
-        pass  # Implementación específica para el décimo frame para calcular la puntuación
+        frame_score = sum(roll.pins for roll in self.rolls)
+        if self.extra_roll is not None:
+            frame_score += self.extra_roll.pins
+        return frame_score
 
     def is_strike(self) -> bool:
-        pass  # Implementación específica para el décimo frame para verificar si es un strike
+        return len(self.rolls) == 1 and self.rolls[0].pins == 10
 
     def is_spare(self) -> bool:
-        pass  # Implementación específica para el décimo frame para verificar si es un spare
+        return len(self.rolls) == 2 and self.score() == 10
 
-
-# Definición de la clase Game que representa un juego completo de bolos
 class Game:
     def __init__(self):
-        self.frames = []  # Lista para mantener los frames del juego
+        self.frames = []
 
     def roll(self, pins: int):
         if not self.frames or len(self.frames[-1].rolls) >= 2:
             if len(self.frames) < 10:
-                self.frames.append(NormalFrame())  # Agrega un frame normal
+                self.frames.append(NormalFrame())
             else:
-                self.frames.append(TenthFrame())  # Agrega el décimo frame si es necesario
-        self.frames[-1].add_roll(pins)  # Agrega un lanzamiento al frame actual
+                self.frames.append(TenthFrame())
+        self.frames[-1].add_roll(pins)
 
     def score(self) -> int:
         total_score = 0
         for i, frame in enumerate(self.frames):
-            total_score += frame.score()  # Calcula la puntuación del frame actual
+            total_score += frame.score()
             if frame.is_strike() and i < 9:
                 next_frame = self.frames[i + 1]
-                total_score += next_frame.rolls[0].pins  # Agrega los puntos del siguiente frame si es un strike
+                total_score += next_frame.rolls[0].pins
                 if next_frame.is_strike() and i < 8:
-                    total_score += self.frames[i + 2].rolls[0].pins  # Agrega puntos adicionales si hay dos strikes seguidos
+                    total_score += self.frames[i + 2].rolls[0].pins
             elif frame.is_spare() and i < 9:
-                total_score += self.frames[i + 1].rolls[0].pins  # Agrega puntos adicionales si es un spare
-        return total_score  # Devuelve la puntuación total del juego
+                total_score += self.frames[i + 1].rolls[0].pins
+        return total_score
+
